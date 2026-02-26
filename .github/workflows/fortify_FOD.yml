@@ -65,6 +65,6 @@ jobs:
           -aurl https://api.emea.fortify.com/
           -rid 185870
           -tc "${{ secrets.FOD_TENANT }}"
-          -ac "${{ secrets.FOD_API_KEY }}" "${{ secrets.FOD_API_SECRET }}"
+          -ac "${{ secrets.FOD_CLIENT_ID }}" "${{ secrets.FOD_CLIENT_SECRET }}"
           -ep SubscriptionOnly
           -pp Queue
