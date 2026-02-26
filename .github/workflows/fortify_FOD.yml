@@ -13,7 +13,7 @@
 # documentation. If you need additional assistance, please contact Fortify support.                                                            #
 ################################################################################################################################################
 
-name: Fortify FoD Scan (EMEA)
+name: Fortify FoD SAST
 
 on:
   push:
@@ -24,7 +24,7 @@ permissions:
   contents: read
 
 jobs:
-  fortify-scan:
+  fod-sast:
     runs-on: ubuntu-latest
     environment: FOD
     timeout-minutes: 60
@@ -55,14 +55,16 @@ jobs:
         run: |
           curl -L -o FoDUpload.jar https://github.com/fod-dev/fod-uploader-java/releases/latest/download/FoDUpload.jar
           ls -lh FoDUpload.jar
-          file FoDUpload.jar
           jar tf FoDUpload.jar | head -n 5
 
-      - name: Upload to FoD and start Static Scan
+      - name: Upload package and start scan (API key pair)
         run: >
           java -jar FoDUpload.jar
           -z source.zip
-          -aurl https://emea.fortify.com
+          -purl https://emea.fortify.com/
+          -aurl https://api.emea.fortify.com/
           -rid 185870
-          -tc "${{ secrets.FOD_CLIENT_ID }}"
-          -ts "${{ secrets.FOD_CLIENT_SECRET }}"
+          -tc "${{ secrets.FOD_TENANT }}"
+          -ac "${{ secrets.FOD_API_KEY }}" "${{ secrets.FOD_API_SECRET }}"
+          -ep SubscriptionOnly
+          -pp Queue
