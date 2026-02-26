@@ -13,7 +13,7 @@
 # documentation. If you need additional assistance, please contact Fortify support.                                                            #
 ################################################################################################################################################
 
-name: Fortify FoD Scan
+name: Fortify FoD Scan (EMEA)
 
 on:
   push:
@@ -32,7 +32,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # FoD uploader is a Java JAR
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -51,7 +50,6 @@ jobs:
             -x "**/build/*" \
             -x "**/dist/*"
 
-      # IMPORTANT: Download the real uploader from GitHub release (not FoD /Tools/)
       - name: Download FoD Uploader (FoDUpload.jar)
         run: |
           curl -L -o FoDUpload.jar https://github.com/fod-dev/fod-uploader-java/releases/latest/download/FoDUpload.jar
@@ -59,11 +57,11 @@ jobs:
           file FoDUpload.jar
           jar tf FoDUpload.jar | head -n 5
 
-          - name: Upload to FoD and start Static Scan
-            run: |
-              java -jar FoDUpload.jar \
-                -z source.zip \
-                -aurl https://emea.fortify.com \
-                -rid 185870 \
-                -tc "${{ secrets.FOD_CLIENT_ID }}" \
-                -ts "${{ secrets.FOD_CLIENT_SECRET }}"
+      - name: Upload to FoD and start Static Scan
+        run: >
+          java -jar FoDUpload.jar
+          -z source.zip
+          -aurl https://emea.fortify.com
+          -rid 185870
+          -tc "${{ secrets.FOD_CLIENT_ID }}"
+          -ts "${{ secrets.FOD_CLIENT_SECRET }}"
