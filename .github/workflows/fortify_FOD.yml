@@ -26,6 +26,7 @@ permissions:
 jobs:
   fortify-scan:
     runs-on: ubuntu-latest
+    environment: FOD
     timeout-minutes: 60
 
     steps:
