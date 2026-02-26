@@ -59,14 +59,11 @@ jobs:
           file FoDUpload.jar
           jar tf FoDUpload.jar | head -n 5
 
-      - name: Upload to FoD and start Static Scan
-        env:
-          FOD_CLIENT_ID: ${{ secrets.FOD_CLIENT_ID }}
-          FOD_CLIENT_SECRET: ${{ secrets.FOD_CLIENT_SECRET }}
-        run: |
-          java -jar FoDUpload.jar \
-            -z source.zip \
-            -aurl https://emea.fortify.com \
-            -rid 185870 \
-            -tc "${FOD_CLIENT_ID}" \
-            -ts "${FOD_CLIENT_SECRET}"
+          - name: Upload to FoD and start Static Scan
+            run: |
+              java -jar FoDUpload.jar \
+                -z source.zip \
+                -aurl https://emea.fortify.com \
+                -rid 185870 \
+                -tc "${{ secrets.FOD_CLIENT_ID }}" \
+                -ts "${{ secrets.FOD_CLIENT_SECRET }}"
