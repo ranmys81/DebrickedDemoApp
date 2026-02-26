@@ -20,37 +20,53 @@ on:
     branches: [ main ]
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   fortify-scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # FoD Uploader is a Java .jar, so we need Java
+      # FoD uploader is a Java JAR
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
-      # Create a simple zip of the repo (FoD will analyze what it needs)
-      - name: Zip source
+      - name: Create source zip
         run: |
           sudo apt-get update
           sudo apt-get install -y zip
-          zip -r source.zip . -x ".git/*"
+          zip -r source.zip . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x "**/node_modules/*" \
+            -x "**/target/*" \
+            -x "**/build/*" \
+            -x "**/dist/*"
 
-      # IMPORTANT: Use EMEA base URL since your tenant is emea.fortify.com
-      - name: Download FoD Uploader
-        run: curl -L -o FoDUploader.jar https://emea.fortify.com/Tools/FoDUploader.jar
-
-      - name: Upload & start scan in FoD
+      # IMPORTANT: Download the real uploader from GitHub release (not FoD /Tools/)
+      - name: Download FoD Uploader (FoDUpload.jar)
         run: |
-          java -jar FoDUploader.jar \
+          curl -L -o FoDUpload.jar https://github.com/fod-dev/fod-uploader-java/releases/latest/download/FoDUpload.jar
+          ls -lh FoDUpload.jar
+          file FoDUpload.jar
+          jar tf FoDUpload.jar | head -n 5
+
+      - name: Upload to FoD and start Static Scan
+        env:
+          FOD_CLIENT_ID: ${{ secrets.FOD_CLIENT_ID }}
+          FOD_CLIENT_SECRET: ${{ secrets.FOD_CLIENT_SECRET }}
+        run: |
+          java -jar FoDUpload.jar \
             -z source.zip \
             -aurl https://emea.fortify.com \
             -rid 185870 \
-            -tc "${{ secrets.FOD_CLIENT_ID }}" \
-            -ts "${{ secrets.FOD_CLIENT_SECRET }}"
+            -tc "${FOD_CLIENT_ID}" \
+            -ts "${FOD_CLIENT_SECRET}"
