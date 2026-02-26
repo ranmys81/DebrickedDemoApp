@@ -13,21 +13,44 @@
 # documentation. If you need additional assistance, please contact Fortify support.                                                            #
 ################################################################################################################################################
 
-name: Fortify Scan
+name: Fortify FoD Scan
 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch: {}
 
 jobs:
   fortify-scan:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Run Fortify Scan
-        uses: fortify/gha-fod-sast@v1
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # FoD Uploader is a Java .jar, so we need Java
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
-          client-id: ${{ secrets.FOD_CLIENT_ID }}
-          client-secret: ${{ secrets.FOD_CLIENT_SECRET }}
-          release-id: v1
+          distribution: temurin
+          java-version: '17'
+
+      # Create a simple zip of the repo (FoD will analyze what it needs)
+      - name: Zip source
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zip
+          zip -r source.zip . -x ".git/*"
+
+      # IMPORTANT: Use EMEA base URL since your tenant is emea.fortify.com
+      - name: Download FoD Uploader
+        run: curl -L -o FoDUploader.jar https://emea.fortify.com/Tools/FoDUploader.jar
+
+      - name: Upload & start scan in FoD
+        run: |
+          java -jar FoDUploader.jar \
+            -z source.zip \
+            -aurl https://emea.fortify.com \
+            -rid 185870 \
+            -tc "${{ secrets.FOD_CLIENT_ID }}" \
+            -ts "${{ secrets.FOD_CLIENT_SECRET }}"
